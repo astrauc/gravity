@@ -3,6 +3,8 @@ include!(concat!(env!("OUT_DIR"), "/protobuf/mod.rs"));
 
 
 use core::time;
+use std::sync::Arc;
+use std::sync::Mutex;
 use crate::ffi::new_future_response;
 use crate::SpdLog;
 use crate::GravityServiceProvider;
@@ -73,7 +75,7 @@ fn service() {
         ret = gn2.init("MultiplicationRequestor");
      }
 
-    let requestor = gn2.tokenize_requestor(MyRequestor {});
+    let requestor = Arc::new(Mutex::new(MyRequestor {}));
 
     let mut mult_request = GravityDataProduct::with_id("Multiplication");
     let mut operands = MultPB::new();
@@ -82,12 +84,21 @@ fn service() {
     operands.set_multiplicand_b(2);
     mult_request.set_data(&operands);
     
-    ret = gn2.request_async("Multiplication", &mult_request, &requestor);
+    ret = gn2.request_async("Multiplication", &mult_request, requestor.clone());
     while ret != GravityReturnCode::SUCCESS {
         // SpdLog::warn("request to Multiplication service failed, retrying...");
         std::thread::sleep(time::Duration::from_secs(1));
 
-        ret = gn2.request_async("Multiplication", &mult_request, &requestor);
+        ret = gn2.request_async("Multiplication", &mult_request, requestor.clone());
+    }
+
+    //do twice to see if it works
+    ret = gn2.request_async("Multiplication", &mult_request, requestor.clone());
+    while ret != GravityReturnCode::SUCCESS {
+        // SpdLog::warn("request to Multiplication service failed, retrying...");
+        std::thread::sleep(time::Duration::from_secs(1));
+
+        ret = gn2.request_async("Multiplication", &mult_request, requestor.clone());
     }
 
     let mut request2 = GravityDataProduct::with_id("Multiplication");
@@ -201,7 +212,7 @@ fn service2 () {
         ret = gn2.init("BigComplexRequestor");
      }
 
-    let requestor = gn2.tokenize_requestor(BetterRequestor {});
+    let requestor = Arc::new(Mutex::new(BetterRequestor {}));
 
     let mut mult_request = GravityDataProduct::with_id("BigComplex");
     let mut operands = BigGuyPB::new();
@@ -227,12 +238,12 @@ fn service2 () {
     }
     mult_request.set_data(&operands);
     
-    ret = gn2.request_async("BigComplex", &mult_request, &requestor);
+    ret = gn2.request_async("BigComplex", &mult_request, requestor.clone());
     while ret != GravityReturnCode::SUCCESS {
         // SpdLog::warn("request to Multiplication service failed, retrying...");
         std::thread::sleep(time::Duration::from_secs(1));
 
-        ret = gn2.request_async("BigComplex", &mult_request, &requestor);
+        ret = gn2.request_async("BigComplex", &mult_request, requestor.clone());
     }
 
     let mut request2 = GravityDataProduct::with_id("BigComplex");

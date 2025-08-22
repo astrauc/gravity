@@ -1,7 +1,7 @@
 include!(concat!(env!("OUT_DIR"), "/protobuf/mod.rs"));
 
 use std::{process::Command, time};
-
+use std::sync::{Arc, Mutex};
 use spdlog::{critical, error, warn};
 
 use crate::{gravity_data_product::GravityDataProduct, gravity_node::{GravityNode, GravityReturnCode, GravityTransportType}, gravity_subscriber::GravitySubscriber, protos::BasicCounterDataProduct::BasicCounterDataProductPB};
@@ -77,9 +77,9 @@ fn simple_relay() {
     let mut gn = GravityNode::new();
     gn.init("Subscriber");
 
-    let counter_subscriber = SimpleCounterSubscriber {};
+    let counter_subscriber = Arc::new(Mutex::new(SimpleCounterSubscriber {}));
 
-    gn.subscribe("BasicCounterDataProduct", &counter_subscriber);
+    gn.subscribe("BasicCounterDataProduct", counter_subscriber.clone());
 
     publish();
 

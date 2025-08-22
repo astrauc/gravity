@@ -107,6 +107,7 @@
 //!    use gravity::GravityDataProduct;
 //!    use gravity::SpdLog;
 //!    use BasicCounterDataProduct::*;
+//!    use std::sync::{Mutex, Arc};
 //! 
 //!    struct MySubscriber {}
 //!
@@ -136,11 +137,11 @@
 //!    
 //!        //This is just an example, you can have any other way to 
 //!        //instantiate your own GravitySubscriber, as long as it impl GravitySubscriber trait
-//!        let subscriber = gn.tokenize_subscriber( MySubscriber {} );
+//!        let subscriber = Arc::new(Mutex::new( MySubscriber {} ));
 //!    
 //!        //subscribe to the data product
 //!        //takes in a borrowed subscriber token
-//!        gn.subscribe("BasicCounterDataProduct", &subscriber);
+//!        gn.subscribe("BasicCounterDataProduct", subscriber.clone());
 //!     
 //!        //gn.wait_for_exit()
 //!    }

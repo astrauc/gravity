@@ -1,6 +1,7 @@
 include!(concat!(env!("OUT_DIR"), "/protobuf/mod.rs"));
 
 use core::time;
+use std::sync::{Arc, Mutex};
 
 use crate::{unit_tests::subscriber, GravityDataProduct, GravityNode, GravitySubscriber, GravityTransportType, SpdLog};
 use BasicCounterDataProduct::*;
@@ -50,9 +51,9 @@ fn subscriber_drop() {
     let mut gn = GravityNode::new();
     gn.init("DropSubscriberComponent");
 
-    let subscriber = gn.tokenize_subscriber(MySubscriber {});
+    let subscriber = Arc::new(Mutex::new(MySubscriber {}));
 
-    gn.subscribe("DropDataProduct", &subscriber);
+    gn.subscribe("DropDataProduct", subscriber.clone());
 
     std::thread::sleep(time::Duration::from_secs(2));
 

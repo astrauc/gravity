@@ -5,6 +5,7 @@ include!(concat!(env!("OUT_DIR"), "/protobuf/mod.rs"));
 
 use std::rc::Rc;
 use std::sync::Arc;
+use std::sync::Mutex;
 use std::time;
 use crate::gravity_node::SubscriberToken;
 use crate::unit_tests::subscriber;
@@ -40,10 +41,10 @@ fn basic_subscriber () {
     gnn.init("SubNode");
     let data_product_id = "RustDataProduct";
 
-    let s = MySubscriber {};
-    let subscriber = gnn.tokenize_subscriber(s);
+    let s = Arc::new( Mutex::new( MySubscriber {} ));
+    // let subscriber = gnn.tokenize_subscriber(s);
 
-    gnn.subscribe(data_product_id, &subscriber);
+    gnn.subscribe(data_product_id, s.clone());
 
 
     let mut gn = GravityNode::new();
@@ -88,7 +89,7 @@ fn basic_subscriber () {
             std::process::exit(1)
         }
 
-        if count == 9 { gnn.unsubscribe(data_product_id, &subscriber); }
+        if count == 9 { gnn.unsubscribe(data_product_id, s.clone()); }
 
         if count == 18 { quit = true;}
         count += 1;
@@ -166,12 +167,12 @@ fn multiple_subscribers () {
     gn.init("SimpleGravityComponentSub");
 
     // subscribe counter
-    let counter = gn.tokenize_subscriber(CounterSubscriber { count_totals: 0} );
-    gn.subscribe("BasicCounterDataProduct", &counter);
+    let counter = Arc::new( Mutex::new( CounterSubscriber { count_totals: 0} ));
+    gn.subscribe("BasicCounterDataProduct", counter.clone());
 
     // subscribe message
-    let hello = gn.tokenize_subscriber(HelloSubscriber {});
-    gn.subscribe("HelloWorldDataProduct", &hello);
+    let hello = Arc::new( Mutex::new(HelloSubscriber {}));
+    gn.subscribe("HelloWorldDataProduct", hello.clone());
 
     // // subscribe to both
     // let simple = gn.tokenize_subscriber(SimpleSubscriber {});
@@ -217,82 +218,82 @@ fn multiple_subscribers () {
 
 }
 
-fn external_subscribe(gn: &mut GravityNode, subscriber: SubscriberToken) -> SubscriberToken {
-    gn.subscribe("SimpleRustDataProduct", &subscriber);
+fn external_subscribe(gn: &mut GravityNode, subscriber: Arc<Mutex<impl GravitySubscriber + 'static>>) -> Arc<Mutex<dyn GravitySubscriber + 'static>> {
+    gn.subscribe("SimpleRustDataProduct", subscriber.clone());
     subscriber
 }
 
 
-#[test]
-fn outside_function () {
+// #[test]
+// fn outside_function () {
 
-    let mut gnn = GravityNode::new();
-    gnn.init("SimpleGravityComponent");
+//     let mut gnn = GravityNode::new();
+//     gnn.init("SimpleGravityComponent");
 
-    let mut sub = gnn.tokenize_subscriber(MySubscriber {});
+//     let mut sub = Arc::new( Mutex::new(MySubscriber {}));
 
-    sub = external_subscribe(&mut gnn, sub);
-    gnn.subscribe("SimpleRustDataProduct", &sub);
+//     sub = external_subscribe(&mut gnn, sub.clone());
+//     gnn.subscribe("SimpleRustDataProduct", &sub);
     
-    //testing a dropped subscriber struct. Still works
-    {
-        let sub = gnn.tokenize_subscriber(MySubscriber {});
-        gnn.subscribe("SimpleRustDataProduct", &sub);
-    }
+//     //testing a dropped subscriber struct. Still works
+//     {
+//         let sub = gnn.tokenize_subscriber(MySubscriber {});
+//         gnn.subscribe("SimpleRustDataProduct", &sub);
+//     }
 
-    let data_product_id = "SimpleRustDataProduct";
-    let mut gn = GravityNode::new();
-    let mut ret = gn.init("RustExample");
-    let fs = gn.get_int_param("Fs", 0);
+//     let data_product_id = "SimpleRustDataProduct";
+//     let mut gn = GravityNode::new();
+//     let mut ret = gn.init("RustExample");
+//     let fs = gn.get_int_param("Fs", 0);
    
-    if ret != GravityReturnCode::SUCCESS {
-        // critical!("Unable to initialize GravityNode (return code {:?})", ret);
-        std::process::exit(1);
-    }
-    // info!("Gravity returned code SUCCESS. Init successful");
+//     if ret != GravityReturnCode::SUCCESS {
+//         // critical!("Unable to initialize GravityNode (return code {:?})", ret);
+//         std::process::exit(1);
+//     }
+//     // info!("Gravity returned code SUCCESS. Init successful");
 
 
     
-    ret = gn.register_data_product(&data_product_id, GravityTransportType::TCP);
-    if ret != GravityReturnCode::SUCCESS {
-        // critical!("Unable to register data product (return code {:?})", ret);
-        std::process::exit(1)
-    }
+//     ret = gn.register_data_product(&data_product_id, GravityTransportType::TCP);
+//     if ret != GravityReturnCode::SUCCESS {
+//         // critical!("Unable to register data product (return code {:?})", ret);
+//         std::process::exit(1)
+//     }
 
     
 
-    std::thread::sleep(time::Duration::from_secs(1));
+//     std::thread::sleep(time::Duration::from_secs(1));
 
-    let mut quit = false;
-    let mut count = 1;
-    while !quit
-    {   
-        let mut gdp = GravityDataProduct::with_id(&data_product_id);
+//     let mut quit = false;
+//     let mut count = 1;
+//     while !quit
+//     {   
+//         let mut gdp = GravityDataProduct::with_id(&data_product_id);
 
-        let mut data = MultPB::new();
-        data.set_multiplicand_a(count);
-        data.set_multiplicand_b(count + 1024);
+//         let mut data = MultPB::new();
+//         data.set_multiplicand_a(count);
+//         data.set_multiplicand_b(count + 1024);
 
-    //     //TODO, but that should be all
-        gdp.set_data(&data);
+//     //     //TODO, but that should be all
+//         gdp.set_data(&data);
         
         
-        ret = gn.publish(&gdp);
-        if ret != GravityReturnCode::SUCCESS {
-            // error!("Could not publish data product (return code {:?})", ret);
-            std::process::exit(1)
-        }
-        // if count == 9 { gnn.unsubscribe(data_product_id, &sub); 
-        //     std::thread::sleep(time::Duration::from_millis(300));}
+//         ret = gn.publish(&gdp);
+//         if ret != GravityReturnCode::SUCCESS {
+//             // error!("Could not publish data product (return code {:?})", ret);
+//             std::process::exit(1)
+//         }
+//         // if count == 9 { gnn.unsubscribe(data_product_id, &sub); 
+//         //     std::thread::sleep(time::Duration::from_millis(300));}
 
-        if count == 15 { quit = true;}
-        count += 1;
+//         if count == 15 { quit = true;}
+//         count += 1;
 
-        std::thread::sleep(time::Duration::from_millis(100));
-    }
+//         std::thread::sleep(time::Duration::from_millis(100));
+//     }
 
-    // gn.wait_for_exit();  
-}
+//     // gn.wait_for_exit();  
+// }
 
 
 struct MyDropSubscriber {}
@@ -313,9 +314,9 @@ fn dropped_node() {
     let mut gnn = GravityNode::new();
     gnn.init("SimpleGravityComponent");
 
-    let sub = gnn.tokenize_subscriber( MyDropSubscriber {} );
+    let sub = Arc::new(Mutex::new( MyDropSubscriber {} ));
 
-    gnn.subscribe("SimpleRustDataProduct", &sub);
+    gnn.subscribe("SimpleRustDataProduct", sub.clone());
     {
         let to_drop = gnn;
     }

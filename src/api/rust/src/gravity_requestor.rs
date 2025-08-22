@@ -1,4 +1,6 @@
 
+use std::sync::{Arc, Mutex};
+
 use crate::gravity_data_product::GravityDataProduct;
 
 /// Interface specification for a trait object that will function as the "client" side of a request-response interaction.
@@ -12,5 +14,5 @@ pub trait GravityRequestor {
 
 
 pub(crate) struct RequestorWrap {
-    pub(crate) requestor: Box<dyn GravityRequestor>,
+    pub(crate) requestor: Arc<Mutex<dyn GravityRequestor>>,
 }

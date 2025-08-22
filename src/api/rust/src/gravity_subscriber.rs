@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 use crate::gravity_data_product::GravityDataProduct;
 
 /// Interface specification for an object that will respond to subscriptions.
@@ -8,5 +10,5 @@ pub trait GravitySubscriber {
 }
 
 pub(crate) struct SubscriberWrap {
-    pub(crate) subscriber: Box<dyn GravitySubscriber>,
+    pub(crate) subscriber: Arc<Mutex<dyn GravitySubscriber>>,
 }

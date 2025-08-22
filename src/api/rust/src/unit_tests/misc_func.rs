@@ -1,4 +1,5 @@
 use core::time;
+use std::sync::{Arc, Mutex};
 
 use crate::{GravityDataProduct, GravityHeartbeatListener, GravityNode, GravityTransportType, GravitySubscriber, SpdLog};
 
@@ -71,9 +72,9 @@ fn misc_component_2 () -> GravityNode {
     gn.register_heartbeat_listener("MiscGravityComponentID1", interval, hb1);
 
 
-    let ipc_subscriber = gn.tokenize_subscriber(MiscGravitySubscriber {});
+    let ipc_subscriber = Arc::new(Mutex::new(MiscGravitySubscriber {}));
 
-    gn.subscribe("IPCDataProduct", &ipc_subscriber);
+    gn.subscribe("IPCDataProduct", ipc_subscriber.clone());
 
     gn
 }

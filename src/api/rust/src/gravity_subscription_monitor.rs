@@ -1,3 +1,5 @@
+use std::sync::{Arc, Mutex};
+
 /// Interface specification for a trait object that will respons to subscription timeouts.
 pub trait GravitySubscriptionMonitor {
     /// Called on implementing object when a subscription is not received within the registered time constraints.
@@ -7,5 +9,5 @@ pub trait GravitySubscriptionMonitor {
 }
 
 pub(crate) struct MonitorWrap {
-    pub(crate) monitor: Box<dyn GravitySubscriptionMonitor>,
+    pub(crate) monitor: Arc<Mutex<dyn GravitySubscriptionMonitor>>,
 }
