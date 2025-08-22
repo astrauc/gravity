@@ -76,27 +76,10 @@ impl GravityNode {
         ffi::wait_for_exit(&self.gn);
     }
 
-    /// Gets a token for use in subscribing, unsubscribing, and registering and unregistering relays.
-    /// Dropping a token does not modify the GravityNode (including subscriptions).
-    /// Dropping a token will not cause a subscription to cancel, only unsubscribing and dropping the GravityNode will.
-    /// Once a token is dropped, it and it's information cannot be recovered, so make sure to keep it in scope if you would
-    /// like to subscribe or unsubscribe with it.
-    // pub fn tokenize_subscriber(&mut self, subscriber: impl GravitySubscriber + 'static) -> SubscriberToken {
-    //     let boxed = Box::new(subscriber) as Box<dyn GravitySubscriber>;
-    //     let mut wrap = Arc::new(SubscriberWrap { subscriber: boxed });
-    //     let cpp_sub = unsafe {
-    //         ffi::new_rust_subscriber(GravityNode::sub_filled_internal,
-    //              Arc::get_mut(&mut wrap).unwrap() as * mut SubscriberWrap)
-    //     };
-    //     let key = COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-    //     let tok = SubscriberToken { key: key };
-    //     self.subscribers_map.insert(key, (wrap, cpp_sub));
-    //     tok
-    // }
+    
     /// Setup a subscription to a data product throguh the Gravity Service Directory.
     /// The data_product_id param is the ID of the data product of interest.
-    /// The Subscriber is a token that has been tokenized with the GravityNode.
-    /// If the token has not been registered with this GravityNode, returns NOT_REGISTERED return code
+    /// Returns success code.
     pub fn subscribe(
         &mut self,
         data_product_id: &str,
@@ -130,9 +113,8 @@ impl GravityNode {
 
     /// Setup a subscription to a data product throguh the Gravity Service Directory.
     /// The data_product_id param is the ID of the data product of interest.
-    /// The Subscriber is a token that has been tokenized with the GravityNode.
     /// Adds optional parameter filter, a text filter to apply to subscription.
-    /// Returns success flag or not_registered flag if the token is not tokenized with the current GravityNode.
+    /// Returns success flag.
     pub fn subscribe_with_filter(
         &mut self,
         data_product_id: &str,
@@ -166,12 +148,11 @@ impl GravityNode {
         ret
     }
 
-    // /// Setup a subscription to a data product throguh the Gravity Service Directory.
-    // /// The data_product_id param is the ID of the data product of interest.
-    // /// The Subscriber is a token that has been tokenized with the GravityNode.
-    // /// Adds optional parameter filter, a text filter to apply to subscription.
-    // /// Adds optional parameter domain, the domain of the network components.
-    // /// Returns success flag or not_registered flag if the token is not tokenized with the current GravityNode.
+    /// Setup a subscription to a data product throguh the Gravity Service Directory.
+    /// The data_product_id param is the ID of the data product of interest.
+    /// Adds optional parameter filter, a text filter to apply to subscription.
+    /// Adds optional parameter domain, the domain of the network components.
+    /// Returns success flag.
     pub fn subscribe_with_domain(
         &mut self,
         data_product_id: &str,
@@ -207,13 +188,12 @@ impl GravityNode {
         ret
     }
 
-    // /// Setup a subscription to a data product throguh the Gravity Service Directory.
-    // /// The data_product_id param is the ID of the data product of interest.
-    // /// The Subscriber is a token that has been tokenized with the GravityNode.
-    // /// Adds optional parameter filter, a text filter to apply to subscription.
-    // /// Adds optional parameter domain, the domain of the network components.
-    // /// Adds optional paramter receive_last_cache_value.
-    // /// Returns success flag or not_registered flag if the token is not tokenized with the current GravityNode.
+    /// Setup a subscription to a data product throguh the Gravity Service Directory.
+    /// The data_product_id param is the ID of the data product of interest.
+    /// Adds optional parameter filter, a text filter to apply to subscription.
+    /// Adds optional parameter domain, the domain of the network components.
+    /// Adds optional paramter receive_last_cache_value.
+    /// Returns success flag.
     pub fn subscribe_with_cache(
         &mut self,
         data_product_id: &str,
@@ -311,31 +291,8 @@ impl GravityNode {
         ffi::subsribers_exist(&self.gn, &dpid, has_subscribers)
     }
 
-    /// Get a token to use to request services asynchronously
-    /// Dropping a token does not change the GravityNode in any way.
-    /// Once a token is dropped, the information it and the information it contains is not recoverable
-    // pub fn tokenize_requestor(
-    //     &mut self,
-    //     requestor: impl GravityRequestor + 'static,
-    // ) -> RequestorToken {
-        
-    //     let boxed = Box::new(requestor) as Box<dyn GravityRequestor>;
-    //     let mut wrap = Arc::new(RequestorWrap { requestor: boxed });
-    //     let cpp_sub = unsafe {
-    //         ffi::new_rust_requestor(
-    //             GravityNode::request_filled_internal,
-    //             GravityNode::request_timeout_internal,
-    //             Arc::get_mut(&mut wrap).unwrap() as *mut RequestorWrap,
-    //         )
-    //     };
-    //     let key = COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-    //     let tok = RequestorToken { key: key };
-    //     self.requestor_provider_map.insert(key, (wrap, cpp_sub));
-    //     tok
-    // }
     /// Make an asynchronous request against a service provider through the Gravity Service Directory.
-    /// requestor is a token that has been tokenizedd with the GravityNode.
-    /// Returns success flag or not_registered flag if the token is not tokenized with the current GravityNode.
+    /// Returns success flag.
     pub fn request_async(
         &mut self,
         service_id: &str,
@@ -375,9 +332,8 @@ impl GravityNode {
         
     }
     /// Make an asynchronous request against a service provider through the Gravity Service Directory.
-    /// requestor is a token that has been tokenize with the GravityNode.
     /// With parameter request_id, the identifier for this request.
-    /// Returns success flag or not_registered flag if the token is not tokenized with the current GravityNode.
+    /// Returns success flag.
     pub fn request_async_with_request_id(
         &mut self,
         service_id: &str,
@@ -419,10 +375,9 @@ impl GravityNode {
     }
 
     /// Make an asynchronous request against a service provider through the Gravity Service Directory.
-    /// requestor is a token that has been tokenize with the GravityNode.
     /// With parameter request_id, the identifier for this request.
     /// With parameter timeout_milliseconds, the timeout in Milliseconds (-1 for no timeout).
-    /// Returns success flag or not_registered flag if the token is not tokenized with the current GravityNode.
+    /// Returns success flag.
     pub fn request_async_with_timeout(
         &mut self,
         service_id: &str,
@@ -464,11 +419,10 @@ impl GravityNode {
     }
 
     /// Make an asynchronous request against a service provider through the Gravity Service Directory.
-    /// requestor is a token that has been tokenize with the GravityNode.
     /// With parameter request_id, the identifier for this request.
     /// With parameter timeout_milliseconds, the timeout in Milliseconds (-1 for no timeout).
     /// With parameter domain, the domain of the network components.
-    /// Returns success flag or not_registered flag if the token is not tokenized with the current GravityNode.
+    /// Returns success flag.
     pub fn request_async_with_domain(
         &mut self,
         service_id: &str,
@@ -653,26 +607,8 @@ impl GravityNode {
         ffi::unregister_data_product(&self.gn, &dpid)
     }
 
-    /// Get a token to register services
-    /// Gives GravityNode ownership of the GravityServiceProvider so it controls its scope
-    /// Dropping a token will not affect the GravityNode in any way (including its registered services)
-    /// Use caution since once a token its dropped, it is not recoverable.
-    // pub fn tokenize_service(&mut self, server: impl GravityServiceProvider + 'static) -> ServiceToken {
-    //     let boxed = Box::new(server) as Box<dyn GravityServiceProvider>;
-    //     let mut wrap = Arc::new(ServiceWrap { service: boxed });
-    //     let cpp_sub = unsafe {
-    //         ffi::new_rust_service_provider(
-    //             GravityNode::request_internal,
-    //              Arc::get_mut(&mut wrap).unwrap() as * mut ServiceWrap)
-    //     };
-    //     let key = COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-    //     let tok = ServiceToken { key: key };
-    //     self.service_provider_map.insert(key, (wrap, cpp_sub));
-    //     tok
-    // }
-
     /// Registers as a service provider with Gravity.
-    /// Returns success flag or not_registered flag if the token is not tokenized with the current GravityNode
+    /// Returns success flag.
     pub fn register_service(
         &mut self,
         service_id: &str,
@@ -712,25 +648,8 @@ impl GravityNode {
         ffi::unregister_service(&self.gn, &sid)
     }
 
-    /// Gets a token to use to register a heartbeat listener corresponding to the GravityHeartbeatListener provided.
-    /// Dropping a token does not affect the GravityNode and it and its information are irrecoverable
-    // pub fn tokenize_heartbeat_listener(&mut self, listener: impl GravityHeartbeatListener + 'static) -> HeartbeatListenerToken {
-    //     let boxed = Box::new(listener);
-
-    //     let mut wrap = Arc::new(ListenerWrap { listener: boxed });
-    //     let cpp_listener = unsafe {
-    //         ffi::new_rust_heartbeat_listener(
-    //             GravityNode::missed_heartbeat_internal,
-    //             GravityNode::received_heartbeat_internal,
-    //             Arc::get_mut(&mut wrap).unwrap() as * mut ListenerWrap)
-    //     };
-    //     let key = COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-    //     let tok = HeartbeatListenerToken { key: key };
-    //     self.listener_map.insert(key, (wrap, cpp_listener));
-    //     tok
-    // }
     /// Registers a callback to be called when we don't get a heartbeat from another component.
-    /// Returns success flag or not_registered flag if the token is not tokenized with the current GravityNode
+    /// Returns success flag.
     pub fn register_heartbeat_listener(
         &mut self,
         component_id: &str,
@@ -834,69 +753,108 @@ impl GravityNode {
     /// to this data if they are on the same host (local__only == true), or it it is acting as a global relay (local_only == false).
     /// The Gravity infrastructure automatically handles which components should receive relayed or non-relayed data.
     ///
-    /// Returns success flag or not_registered flag if the token is not tokenized with the current GravityNode
-    // pub fn register_relay(&mut self, data_product_id: &str, subscriber: &SubscriberToken,
-    //                       local_only: bool, transport_type: GravityTransportType) -> GravityReturnCode {
-    //     let_cxx_string!(dpid = data_product_id);
+    /// Returns success flag.
+    pub fn register_relay(&mut self, data_product_id: &str, subscriber: Arc<Mutex<dyn GravitySubscriber>> ,
+                          local_only: bool, transport_type: GravityTransportType) -> GravityReturnCode {
+        let_cxx_string!(dpid = data_product_id);
 
-    //     let item = self.subscribers_map.get(&subscriber.key);
+        let mut item = None;
+        for (arcd, cpp_sub) in self.subscribers_list.iter() {
+            let this = &arcd.subscriber;
+            if Arc::ptr_eq(this, &subscriber) {
+                item = Some(cpp_sub);
+            }
+        }
 
-    //     match item {
-    //         None => GravityReturnCodes::NOT_REGISTERED,
-    //         Some( (_, cpp_sub) ) => {
-    //             ffi::register_relay(
-    //                 &self.gn,
-    //                 &dpid,
-    //                 cpp_sub,
-    //                 local_only,
-    //                 transport_type)
-    //         }
-    //     }
-    // }
+        match item {
+            None => {
+                let mut wrap = Arc::new(SubscriberWrap { subscriber: subscriber });
+                let cpp_sub = unsafe {
+                    ffi::new_rust_subscriber(GravityNode::sub_filled_internal,
+                        Arc::get_mut(&mut wrap).unwrap() as *mut SubscriberWrap)
+                };
 
-    // /// Register a relay that will act as a pass-through for the given data_product_id. It will be
-    // /// a publisher and subscriber for the given data_product_id, but other components will only subscribe
-    // /// to this data if they are on the same host (local_only == true), or it it is acting as a global relay (local_only == false).
-    // /// The Gravity infrastructure automatically handles which components should receive relayed or non-relayed data.
-    // ///
-    // /// With parameter cache_last_value, flag used to signifgy whether or not GravityNode will cache the last setn value for a published
-    // /// data product. Note that using a Relay with cached_last_value = true is atypical and may result in duplicate messages received
-    // /// by subscribers during the relay start/stop transition.
-    // /// Returns success flag or not_registered flag if the token is not tokenized with the current GravityNode
-    // pub fn register_relay_with_cache(&mut self, data_product_id: &str, subscriber: &SubscriberToken,
-    //                             local_only: bool, transport_type: GravityTransportType, cache_last_value: bool) -> GravityReturnCode {
-    //     let_cxx_string!(dpid = data_product_id);
+                let ret = ffi::register_relay(&self.gn, &dpid, &cpp_sub, local_only, transport_type);
+                self.subscribers_list.push((wrap, cpp_sub));
+                ret
+            
+            },
+            Some( cpp_sub) => {
+                ffi::register_relay(
+                    &self.gn,
+                    &dpid,
+                    cpp_sub,
+                    local_only,
+                    transport_type)
+            }
+        }
+    }
 
-    //     let item = self.subscribers_map.get(&subscriber.key);
+    /// Register a relay that will act as a pass-through for the given data_product_id. It will be
+    /// a publisher and subscriber for the given data_product_id, but other components will only subscribe
+    /// to this data if they are on the same host (local_only == true), or it it is acting as a global relay (local_only == false).
+    /// The Gravity infrastructure automatically handles which components should receive relayed or non-relayed data.
+    ///
+    /// With parameter cache_last_value, flag used to signify whether or not GravityNode will cache the last setn value for a published
+    /// data product. Note that using a Relay with cached_last_value = true is atypical and may result in duplicate messages received
+    /// by subscribers during the relay start/stop transition.
+    /// Returns success flag
+    pub fn register_relay_with_cache(&mut self, data_product_id: &str, subscriber: Arc<Mutex<dyn GravitySubscriber>> ,
+                                local_only: bool, transport_type: GravityTransportType, cache_last_value: bool) -> GravityReturnCode {
+        let_cxx_string!(dpid = data_product_id);
 
-    //     match item {
-    //         None => GravityReturnCodes::NOT_REGISTERED,
-    //         Some( (_, cpp_sub) ) => {
-    //             ffi::register_relay_cache(
-    //                 &self.gn,
-    //                 &dpid,
-    //                 cpp_sub,
-    //                 local_only,
-    //                 transport_type,
-    //                 cache_last_value)
-    //         }
-    //     }
-    // }
+        let mut item = None;
+        for (arcd, cpp_sub) in self.subscribers_list.iter() {
+            let this = &arcd.subscriber;
+            if Arc::ptr_eq(this, &subscriber) {
+                item = Some(cpp_sub);
+            }
+        }
 
-    // /// Unregister a relay for the given data_product_id. Handles unregistering as a publisher and subscriber.
-    // pub fn unregister_relay(&mut self, data_product_id: &str, subscriber: &SubscriberToken) -> GravityReturnCode {
-    //     let_cxx_string!(dpid = data_product_id);
+        match item {
+            None => {
+                let mut wrap = Arc::new(SubscriberWrap { subscriber: subscriber });
+                let cpp_sub = unsafe {
+                    ffi::new_rust_subscriber(GravityNode::sub_filled_internal,
+                        Arc::get_mut(&mut wrap).unwrap() as *mut SubscriberWrap)
+                };
 
-    //     let item = self.subscribers_map.get(&subscriber.key);
+                let ret = ffi::register_relay_cache(&self.gn, &dpid, &cpp_sub, local_only, transport_type, cache_last_value);
+                self.subscribers_list.push((wrap, cpp_sub));
+                ret
+            
+            },
+            Some( cpp_sub) => {
+                ffi::register_relay_cache(
+                    &self.gn,
+                    &dpid,
+                    cpp_sub,
+                    local_only,
+                    transport_type,
+                    cache_last_value)
+            }
+        }
+    }
 
-    //     match item {
-    //         None => GravityReturnCodes::SUCCESS,
-    //         Some( (_,cpp_sub) ) => {
-    //             ffi::unregister_relay(&self.gn, &dpid, cpp_sub)
-    //         }
+    /// Unregister a relay for the given data_product_id. Handles unregistering as a publisher and subscriber.
+    pub fn unregister_relay(&mut self, data_product_id: &str, subscriber: Arc<Mutex<dyn GravitySubscriber>> ) -> GravityReturnCode {
+        let_cxx_string!(dpid = data_product_id);
 
-    //     }
-    // }
+        let mut item = None;
+        for (arcd, cpp_sub) in self.subscribers_list.iter() {
+            let this = &arcd.subscriber;
+            if Arc::ptr_eq(this, &subscriber) {
+                item = Some(cpp_sub);
+            }
+        }
+        match item {
+            None => GravityReturnCodes::SUCCESS,
+            Some( cpp_sub) => {
+                ffi::unregister_relay(&self.gn, &dpid, cpp_sub)
+            }
+
+        }
+    }
 
     /// Returns a String representation of the provided error code.
     pub fn code_string(&self, code: GravityReturnCode) -> String {
@@ -928,27 +886,9 @@ impl GravityNode {
         ffi::send_future_response(&self.gn, &future_response.fr)
     }
 
-    /// Use a GravitySubscriptionMonitor to get a token
-    /// Stores the trait object within the GravityNode so the GravityNode has ownership
-    /// Use the token for setting and clearing subscription monitor.
-    /// Droppping the token will NOT have any effect on the GravityNode, so use caution when tokens go out of scope.
-    /// They are not recoverable
-    // pub fn tokenize_subscription_monitor(&mut self, monitor: Arc) -> SubscriptionMonitorToken {
-
-    //     let mut wrap = Arc::new(MonitorWrap { monitor: boxed });
-
-    //     let cpp_monitor = unsafe {
-    //         ffi::new_rust_subscription_monitor(GravityNode::subscription_timeout_internal, Arc::get_mut(&mut wrap).unwrap() as * mut MonitorWrap)
-    //     };
-
-    //     let key = COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-    //     let tok = SubscriptionMonitorToken { key: key };
-    //     self.monitor_map.insert(key, (wrap, cpp_monitor));
-    //     tok
-    // }
     /// Setup a GravitySubscriptionMonitor to receive subscription timeout information through
     /// the Gravity Service Directory.
-    /// Returns success flag or not_registered flag if the token is not tokenized with the current GravityNode.
+    /// Returns success flag.
     pub fn set_subscription_timout_monitor(
         &mut self,
         data_product_id: &str,
@@ -984,7 +924,7 @@ impl GravityNode {
     /// the Gravity Service Directory.
     ///
     /// With parameter filter.
-    /// Returns success flag or not_registered flag if the token is not tokenized with the current GravityNode.     
+    /// Returns success flag.     
     pub fn set_subscription_timout_monitor_with_filter(
         &mut self,
         data_product_id: &str,
@@ -1025,7 +965,7 @@ impl GravityNode {
     ///
     /// With parameter filter.
     /// With parameter domain.
-    /// Returns success flag or not_registered flag if the token is not tokenized with the current GravityNode.
+    /// Returns success flag.
     pub fn set_subscription_timout_monitor_with_domain(
         &mut self,
         data_product_id: &str,
