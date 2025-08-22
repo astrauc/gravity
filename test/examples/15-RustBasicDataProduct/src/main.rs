@@ -1,7 +1,7 @@
 include!(concat!(env!("OUT_DIR"), "/protobuf/mod.rs"));
 
 use core::time;
-
+use std::sync::{Arc, Mutex};
 use gravity::{GravityReturnCode, GravityDataProduct, GravityNode, GravitySubscriber, GravityTransportType, SpdLog};
 use BasicCounterDataProduct::*;
 
@@ -29,9 +29,9 @@ fn main() {
     assert_eq!(1234, gn.get_int_param("test_number", 0));
 
     gn.register_data_product("BasicCounterDataProduct", GravityTransportType::TCP);
-    let counter_subscriber = gn.tokenize_subscriber(SimpleGravityCounterSubscriber {});
+    let counter_subscriber = Arc::new(Mutex::new(SimpleGravityCounterSubscriber {}));
 
-    gn.subscribe("BasicCounterDataProduct", &counter_subscriber);
+    gn.subscribe("BasicCounterDataProduct", counter_subscriber.clone());
 
     
     //setup the publisher
