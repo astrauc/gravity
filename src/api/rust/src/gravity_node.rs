@@ -671,7 +671,7 @@ impl GravityNode {
     }
 
     // Unregister as a service provider with the Gravity Service Directory.
-    // Returns success flag or not_registered flag if the token is not tokenized with the current GravityNode
+    // Returns success flag.
     pub fn unregister_service(&mut self, service_id: &str) -> GravityReturnCode {
         let_cxx_string!(sid = service_id);
         ffi::unregister_service(&self.gn, &sid)
@@ -714,7 +714,7 @@ impl GravityNode {
 
     /// Registers a callback to be called when we don't get a heartbeat from another component.
     /// With paramter domain, the name of the domain for the component_id.
-    /// Returns success flag or not_registered flag if the token is not tokenized with the current GravityNode
+    /// Returns success flag.
     pub fn register_heartbeat_listener_with_domain(
         &mut self,
         component_id: &str,
@@ -752,7 +752,7 @@ impl GravityNode {
     }
 
     /// Unregisters a callback for when we get a heartbeat from another component.
-    /// Returns success flag or not_registered flag if the token is not tokenized with the current GravityNode
+    /// Returns success flag.
     pub fn unregister_heartbeat_listener(&mut self, component_id: &str) -> GravityReturnCode {
         let_cxx_string!(cid = component_id);
         let ret = ffi::unregister_heartbeat_listener(&self.gn, &cid);
@@ -763,7 +763,7 @@ impl GravityNode {
 
     /// Unregisters a callback for when we get a heartbeat from another component.
     /// With paramter domain, the name of the domain for the component_id.
-    /// Returns success flag or not_registered flag if the token is not tokenized with the current GravityNode
+    /// Returns success flag.
     pub fn unregister_heartbeat_listener_with_domain(
         &mut self,
         component_id: &str,
@@ -1266,32 +1266,3 @@ impl GravityNode {
     }
 }
 
-/// Token used to subscribe and unsubscribe. As well as register and unregister relays.
-/// Must use the token on the GravityNode that you tokenized with.
-pub struct SubscriberToken {
-    pub(crate) key: i32,
-}
-
-/// Token used to request against a service provider
-/// Must use the token on the GravityNode that you tokenized with.
-pub struct RequestorToken {
-    pub(crate) key: i32,
-}
-
-/// Token to register as a service provider the GravityServiceProvider used to create this token.
-/// Must use the token on the GravityNode that you tokenized with.
-pub struct ServiceToken {
-    pub(crate) key: i32,
-}
-
-/// Token to register as a Heartbeat listener.
-/// Must use the token on the GravityNode that you tokenized with.
-pub struct HeartbeatListenerToken {
-    pub(crate) key: i32,
-}
-
-/// Token used to set and clear a subscription monitor
-/// Must use the token on the GravityNode that you tokenized with.
-pub struct SubscriptionMonitorToken {
-    pub(crate) key: i32,
-}

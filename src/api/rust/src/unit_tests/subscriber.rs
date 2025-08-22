@@ -7,7 +7,6 @@ use std::rc::Rc;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::time;
-use crate::gravity_node::SubscriberToken;
 use crate::unit_tests::subscriber;
 use crate::GravityNode;
 use crate::GravityDataProduct;
