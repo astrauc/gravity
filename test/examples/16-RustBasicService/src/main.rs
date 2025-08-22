@@ -1,7 +1,7 @@
 include!(concat!(env!("OUT_DIR"), "/protobuf/mod.rs"));
 
 use core::time;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 use gravity::{GravityDataProduct, GravityNode, GravityRequestor, GravityReturnCode, GravityServiceProvider, GravityTransportType, SpdLog};
 use Multiplication::{MultiplicationOperandsPB, MultiplicationResultPB};
@@ -78,7 +78,7 @@ fn main() {
     gn.init("MultiplicationRequestor");
 
     // Set up the first multiplication request
-    let requestor = gn.tokenize_requestor(MultiplicationRequestor {});
+    let requestor = Arc::new(Mutex::new(MultiplicationRequestor {}));
     let mut mult_request1 = GravityDataProduct::with_id("Multiplication");
     let mut params1 = MultiplicationOperandsPB::new();
     params1.set_multiplicand_a(8);
@@ -88,7 +88,7 @@ fn main() {
     while gn.request_async_with_request_id(
         "Multiplication",  // Service name
         &mult_request1,       // Request
-        &requestor,                   // token representing the object with the callback
+        requestor.clone(),                   // token representing the object with the callback
         "8 x 2"           // string identifying which request this is
     ) != GravityReturnCode::SUCCESS {
         SpdLog::warn("request to Multiplication servicec failed, retrying...");
