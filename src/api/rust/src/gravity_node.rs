@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#![allow(unused_variables)]
 use crate::ffi::*;
 use crate::gravity_heartbeat_listener::{GravityHeartbeatListener, ListenerWrap};
 use crate::gravity_subscription_monitor::{GravitySubscriptionMonitor, MonitorWrap};
@@ -85,30 +86,39 @@ impl GravityNode {
         data_product_id: &str,
         subscriber: Arc<Mutex<dyn GravitySubscriber>>,
     ) -> GravityReturnCode {
-        for (arcd, _) in self.subscribers_list.iter() {
+
+        let_cxx_string!(dpid = data_product_id);
+        let mut item = None;
+        for (arcd, cpp_sub) in self.subscribers_list.iter() {
             let this = &arcd.subscriber;
             if Arc::ptr_eq(this, &subscriber) {
-                return GravityReturnCode::SUCCESS;
+                item = Some(cpp_sub);
             }
         }
 
-        let_cxx_string!(dpid = data_product_id);
-        let mut wrap = Arc::new(SubscriberWrap {
-            subscriber: subscriber,
-        });
+        match item {
+            None => {
+                let mut wrap = Arc::new(SubscriberWrap {subscriber: subscriber});
 
-        let cpp_sub = unsafe {
-            ffi::new_rust_subscriber(
-                GravityNode::sub_filled_internal,
-                Arc::get_mut(&mut wrap).unwrap() as *mut SubscriberWrap,
-            )
-        };
+                let cpp_sub = unsafe {
+                    ffi::new_rust_subscriber(
+                        GravityNode::sub_filled_internal,
+                        Arc::get_mut(&mut wrap).unwrap() as *mut SubscriberWrap,
+                    )
+                };
 
-        let ret = ffi::subscribe(&self.gn, &dpid, &cpp_sub);
+                let ret = ffi::subscribe(&self.gn, &dpid, &cpp_sub);
+                self.subscribers_list.push((wrap, cpp_sub));
+                ret
+            },
+            Some(cpp_sub) => {
+                ffi::subscribe(&self.gn, &dpid, cpp_sub)
+            }
+        }
 
-        self.subscribers_list.push((wrap, cpp_sub));
 
-        ret
+       
+
     }
 
     /// Setup a subscription to a data product throguh the Gravity Service Directory.
@@ -121,31 +131,37 @@ impl GravityNode {
         subscriber: Arc<Mutex<dyn GravitySubscriber>>,
         filter: &str,
     ) -> GravityReturnCode {
-        for (arcd, _) in self.subscribers_list.iter() {
+       
+        let_cxx_string!(dpid = data_product_id);
+        let_cxx_string!(f = filter);
+        let_cxx_string!(dpid = data_product_id);
+        let mut item = None;
+        for (arcd, cpp_sub) in self.subscribers_list.iter() {
             let this = &arcd.subscriber;
             if Arc::ptr_eq(this, &subscriber) {
-                return GravityReturnCode::SUCCESS;
+                item = Some(cpp_sub);
             }
         }
 
-        let_cxx_string!(dpid = data_product_id);
-        let_cxx_string!(f = filter);
-        let mut wrap = Arc::new(SubscriberWrap {
-            subscriber: subscriber,
-        });
+        match item {
+            None => {
+                let mut wrap = Arc::new(SubscriberWrap {subscriber: subscriber});
 
-        let cpp_sub = unsafe {
-            ffi::new_rust_subscriber(
-                GravityNode::sub_filled_internal,
-                Arc::get_mut(&mut wrap).unwrap() as *mut SubscriberWrap,
-            )
-        };
+                let cpp_sub = unsafe {
+                    ffi::new_rust_subscriber(
+                        GravityNode::sub_filled_internal,
+                        Arc::get_mut(&mut wrap).unwrap() as *mut SubscriberWrap,
+                    )
+                };
 
-        let ret = ffi::subscribe_filter(&self.gn, &dpid, &cpp_sub, &f);
-
-        self.subscribers_list.push((wrap, cpp_sub));
-
-        ret
+                let ret = ffi::subscribe_filter(&self.gn, &dpid, &cpp_sub, &f);
+                self.subscribers_list.push((wrap, cpp_sub));
+                ret
+            },
+            Some(cpp_sub) => {
+                ffi::subscribe_filter(&self.gn, &dpid, cpp_sub, &f)
+            }
+        }
     }
 
     /// Setup a subscription to a data product throguh the Gravity Service Directory.
@@ -160,32 +176,38 @@ impl GravityNode {
         filter: &str,
         domain: &str,
     ) -> GravityReturnCode {
-        for (arcd, _) in self.subscribers_list.iter() {
-            let this = &arcd.subscriber;
-            if Arc::ptr_eq(this, &subscriber) {
-                return GravityReturnCode::SUCCESS;
-            }
-        }
-
+    
         let_cxx_string!(dpid = data_product_id);
         let_cxx_string!(f = filter);
         let_cxx_string!(d = domain);
-        let mut wrap = Arc::new(SubscriberWrap {
-            subscriber: subscriber,
-        });
+        let_cxx_string!(dpid = data_product_id);
+        let mut item = None;
+        for (arcd, cpp_sub) in self.subscribers_list.iter() {
+            let this = &arcd.subscriber;
+            if Arc::ptr_eq(this, &subscriber) {
+                item = Some(cpp_sub);
+            }
+        }
 
-        let cpp_sub = unsafe {
-            ffi::new_rust_subscriber(
-                GravityNode::sub_filled_internal,
-                Arc::get_mut(&mut wrap).unwrap() as *mut SubscriberWrap,
-            )
-        };
+        match item {
+            None => {
+                let mut wrap = Arc::new(SubscriberWrap {subscriber: subscriber});
 
-        let ret = ffi::subscribe_domain(&self.gn, &dpid, &cpp_sub, &f, &d);
+                let cpp_sub = unsafe {
+                    ffi::new_rust_subscriber(
+                        GravityNode::sub_filled_internal,
+                        Arc::get_mut(&mut wrap).unwrap() as *mut SubscriberWrap,
+                    )
+                };
 
-        self.subscribers_list.push((wrap, cpp_sub));
-
-        ret
+                let ret = ffi::subscribe_domain(&self.gn, &dpid, &cpp_sub, &f, &d);
+                self.subscribers_list.push((wrap, cpp_sub));
+                ret
+            },
+            Some(cpp_sub) => {
+                ffi::subscribe_domain(&self.gn, &dpid, cpp_sub, &f, &d)
+            }
+        }
     }
 
     /// Setup a subscription to a data product throguh the Gravity Service Directory.
@@ -202,32 +224,39 @@ impl GravityNode {
         domain: &str,
         recieve_last_cache_value: bool,
     ) -> GravityReturnCode {
-        for (arcd, _) in self.subscribers_list.iter() {
-            let this = &arcd.subscriber;
-            if Arc::ptr_eq(this, &subscriber) {
-                return GravityReturnCode::SUCCESS;
-            }
-        }
 
         let_cxx_string!(dpid = data_product_id);
         let_cxx_string!(f = filter);
         let_cxx_string!(d = domain);
-        let mut wrap = Arc::new(SubscriberWrap {
-            subscriber: subscriber,
-        });
 
-        let cpp_sub = unsafe {
-            ffi::new_rust_subscriber(
-                GravityNode::sub_filled_internal,
-                Arc::get_mut(&mut wrap).unwrap() as *mut SubscriberWrap,
-            )
-        };
+        let_cxx_string!(dpid = data_product_id);
+        let mut item = None;
+        for (arcd, cpp_sub) in self.subscribers_list.iter() {
+            let this = &arcd.subscriber;
+            if Arc::ptr_eq(this, &subscriber) {
+                item = Some(cpp_sub);
+            }
+        }
 
-        let ret = ffi::subscribe_cache(&self.gn, &dpid, &cpp_sub, &f, &d, recieve_last_cache_value);
+        match item {
+            None => {
+                let mut wrap = Arc::new(SubscriberWrap {subscriber: subscriber});
 
-        self.subscribers_list.push((wrap, cpp_sub));
+                let cpp_sub = unsafe {
+                    ffi::new_rust_subscriber(
+                        GravityNode::sub_filled_internal,
+                        Arc::get_mut(&mut wrap).unwrap() as *mut SubscriberWrap,
+                    )
+                };
 
-        ret
+                let ret = ffi::subscribe_cache(&self.gn, &dpid, &cpp_sub, &f, &d, recieve_last_cache_value);
+                self.subscribers_list.push((wrap, cpp_sub));
+                ret
+            },
+            Some(cpp_sub) => {
+                ffi::subscribe_cache(&self.gn, &dpid, cpp_sub, &f, &d, recieve_last_cache_value)
+            }
+        }
     }
 
     // /// Un-subscribe from a data product.
@@ -895,29 +924,44 @@ impl GravityNode {
         monitor: Arc<Mutex<dyn GravitySubscriptionMonitor>>,
         milli_second_timeout: i32,
     ) -> GravityReturnCode {
-        for (arcd, _) in self.monitor_list.iter() {
+
+        let mut item = None;
+        for (arcd, cpp_monitor) in self.monitor_list.iter() {
             let this = &arcd.monitor;
             if Arc::ptr_eq(this, &monitor) {
-                return GravityReturnCode::SUCCESS;
+                item = Some(cpp_monitor);
             }
         }
         let_cxx_string!(dpid = data_product_id);
-        let mut wrap = Arc::new(MonitorWrap { monitor: monitor });
-        let cpp_monitor = unsafe {
-            ffi::new_rust_subscription_monitor(
-                GravityNode::subscription_timeout_internal,
-                Arc::get_mut(&mut wrap).unwrap() as *mut MonitorWrap,
-            )
-        };
 
-        let ret = ffi::set_subscription_timeout_monitor(
-            &self.gn,
-            &dpid,
-            &cpp_monitor,
-            milli_second_timeout,
-        );
-        self.monitor_list.push((wrap, cpp_monitor));
-        ret
+        match item {
+            None => {
+                let mut wrap = Arc::new(MonitorWrap { monitor: monitor });
+                let cpp_monitor = unsafe {
+                    ffi::new_rust_subscription_monitor(
+                        GravityNode::subscription_timeout_internal,
+                        Arc::get_mut(&mut wrap).unwrap() as *mut MonitorWrap,
+                    )
+                };
+            
+                let ret = ffi::set_subscription_timeout_monitor(
+                    &self.gn,
+                    &dpid,
+                    &cpp_monitor,
+                    milli_second_timeout,
+                );
+                self.monitor_list.push((wrap, cpp_monitor));
+                ret
+            },
+            Some(cpp_monitor) => {
+                ffi::set_subscription_timeout_monitor(
+                    &self.gn,
+                    &dpid,
+                    &cpp_monitor,
+                    milli_second_timeout,
+                )
+            }
+        }
     }
 
     /// Setup a GravitySubscriptionMonitor to receive subscription timeout information through
@@ -933,31 +977,47 @@ impl GravityNode {
         filter: &str,
     ) -> GravityReturnCode {
 
-        for (arcd, _) in self.monitor_list.iter() {
+        let mut item = None;
+        for (arcd, cpp_monitor) in self.monitor_list.iter() {
             let this = &arcd.monitor;
             if Arc::ptr_eq(this, &monitor) {
-                return GravityReturnCode::SUCCESS;
+                item = Some(cpp_monitor);
             }
         }
         let_cxx_string!(dpid = data_product_id);
         let_cxx_string!(f = filter);
-        let mut wrap = Arc::new(MonitorWrap { monitor: monitor });
-        let cpp_monitor = unsafe {
-            ffi::new_rust_subscription_monitor(
-                GravityNode::subscription_timeout_internal,
-                Arc::get_mut(&mut wrap).unwrap() as *mut MonitorWrap,
-            )
-        };
+        match item {
 
-        let ret = ffi::set_subscription_timeout_monitor_filter(
-            &self.gn,
-            &dpid,
-            &cpp_monitor,
-            milli_second_timeout,
-            &f
-        );
-        self.monitor_list.push((wrap, cpp_monitor));
-        ret
+            None => {
+                
+                let mut wrap = Arc::new(MonitorWrap { monitor: monitor });
+                let cpp_monitor = unsafe {
+                    ffi::new_rust_subscription_monitor(
+                        GravityNode::subscription_timeout_internal,
+                        Arc::get_mut(&mut wrap).unwrap() as *mut MonitorWrap,
+                    )
+                };
+            
+                let ret = ffi::set_subscription_timeout_monitor_filter(
+                    &self.gn,
+                    &dpid,
+                    &cpp_monitor,
+                    milli_second_timeout,
+                    &f
+                );
+                self.monitor_list.push((wrap, cpp_monitor));
+                ret
+            },
+            Some(cpp_monitor) => {
+                ffi::set_subscription_timeout_monitor_filter(
+                    &self.gn,
+                    &dpid,
+                    &cpp_monitor,
+                    milli_second_timeout,
+                    &f
+                )
+            }
+        }
     }
 
     /// Setup a GravitySubscriptionMonitor to receive subscription timeout information through
@@ -974,32 +1034,46 @@ impl GravityNode {
         filter: &str,
         domain: &str,
     ) -> GravityReturnCode {
-        
-        for (arcd, _) in self.monitor_list.iter() {
+            let mut item = None;
+            for (arcd, cpp_monitor) in self.monitor_list.iter() {
                 let this = &arcd.monitor;
                 if Arc::ptr_eq(this, &monitor) {
-                    return GravityReturnCode::SUCCESS;
+                    item = Some(cpp_monitor);
                 }
             }  
             let_cxx_string!(dpid = data_product_id);
             let_cxx_string!(f = filter);
             let_cxx_string!(d = domain);
 
-            let mut wrap = Arc::new(MonitorWrap {monitor: monitor});
-            let cpp_monitor = unsafe {
-                ffi::new_rust_subscription_monitor(
-                    GravityNode::subscription_timeout_internal,
-                    Arc::get_mut(&mut wrap).unwrap() as * mut MonitorWrap)
-            };
+            match item {
 
-            let ret = ffi::set_subscription_timeout_monitor_domain(&self.gn,
-                 &dpid,
-                 &cpp_monitor,
-                 milli_second_timeout,
-                 &f,
-                 &d);
-            self.monitor_list.push((wrap, cpp_monitor));
-            ret
+                None => {
+
+                    let mut wrap = Arc::new(MonitorWrap {monitor: monitor});
+                    let cpp_monitor = unsafe {
+                        ffi::new_rust_subscription_monitor(
+                            GravityNode::subscription_timeout_internal,
+                            Arc::get_mut(&mut wrap).unwrap() as * mut MonitorWrap)
+                    };
+                
+                    let ret = ffi::set_subscription_timeout_monitor_domain(&self.gn,
+                         &dpid,
+                         &cpp_monitor,
+                         milli_second_timeout,
+                         &f,
+                         &d);
+                    self.monitor_list.push((wrap, cpp_monitor));
+                    ret
+                },
+                Some(cpp_monitor) => {
+                    ffi::set_subscription_timeout_monitor_domain(&self.gn,
+                         &dpid,
+                         &cpp_monitor,
+                         milli_second_timeout,
+                         &f,
+                         &d)
+                }
+            }
     }
 
     /// Remove the given data_product_id from the given GravitySubscriptionMonitor.
